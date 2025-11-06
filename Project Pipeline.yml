@@ -1,0 +1,284 @@
+# azure-pipelines.yml
+# Power Platform Solution "Projects": DEV (export/unpack/commit) → UAT (import) → PROD (import)
+# Includes: repo folder scaffolding, Canvas apps unpack, auto-commit with [skip ci],
+#           Tool Installer in every job, PAC diagnostics, artifact verification.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solutionName: 'Projects'
+  # Service connections (update names to match your Project Settings > Service connections)
+  devServiceConnection: 'Spark 365 - Dev'
+  uatServiceConnection: 'Spark 365 - UAT'
+  prodServiceConnection: 'Spark 365 - LIVE'
+  # Unpacked solution folder inside the repo:
+  solutionFolder: 'solutions/Projects'
+  managedArtifactName: 'managed'
+  srcArtifactName: 'src'
+
+stages:
+# =========================== BUILD (DEV) ===========================
+- stage: Build
+  displayName: 'Export from DEV and Unpack (incl. Canvas apps)'
+  jobs:
+  - job: export_unpack
+    displayName: 'Export & Unpack'
+    steps:
+    # Persist credentials so we can push back to the repo
+    - checkout: self
+      clean: true
+      persistCredentials: true
+      fetchDepth: 0
+
+    # Install PAC CLI & Build Tools on the agent
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
+      displayName: 'Power Platform Tool Installer'
+      inputs:
+        AddToolsToPath: true
+
+    # ---------- Scaffold repo folders (idempotent) ----------
+    - pwsh: |
+        $solutionFolder = "$(Build.SourcesDirectory)/$(solutionFolder)"
+        $settingsFolder = "$(Build.SourcesDirectory)/pipelines/settings"
+
+        foreach ($f in @($solutionFolder, $settingsFolder)) {
+          if (!(Test-Path $f)) {
+            New-Item -ItemType Directory -Path $f -Force | Out-Null
+            Write-Host "Created $f"
+          } else {
+            Write-Host "Exists: $f"
+          }
+
+          $keep = Join-Path $f ".gitkeep"
+          if (!(Test-Path $keep)) {
+            New-Item -ItemType File -Path $keep -Force | Out-Null
+            Write-Host "Added placeholder: $keep"
+          }
+        }
+      displayName: 'Scaffold repo folders (solutions/Projects, pipelines/settings)'
+
+    # Optional connectivity check to DEV
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.whoami.PowerPlatformWhoAmi@2
+      displayName: 'WhoAmI (DEV)'
+      inputs:
+        authenticationType: PowerPlatformSPN
+        PowerPlatformSPN: '$(devServiceConnection)'
+
+    # Export UNMANAGED (source for unpacking)
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@2
+      displayName: 'Export UNMANAGED from DEV'
+      inputs:
+        authenticationType: PowerPlatformSPN
+        PowerPlatformSPN: '$(devServiceConnection)'
+        SolutionName: '$(solutionName)'
+        SolutionOutputFile: '$(Build.ArtifactStagingDirectory)/unmanaged/$(solutionName)_unmanaged.zip'
+        Managed: false
+        AsyncOperation: true
+        MaxAsyncWaitTime: 120
+
+    # Export MANAGED (artifact for deployment)
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.export-solution.PowerPlatformExportSolution@2
+      displayName: 'Export MANAGED from DEV'
+      inputs:
+        authenticationType: PowerPlatformSPN
+        PowerPlatformSPN: '$(devServiceConnection)'
+        SolutionName: '$(solutionName)'
+        SolutionOutputFile: '$(Build.ArtifactStagingDirectory)/managed/$(solutionName)_managed.zip'
+        Managed: true
+        AsyncOperation: true
+        MaxAsyncWaitTime: 120
+
+    # Unpack the UNMANAGED solution to text, including Canvas apps
+    - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.unpack-solution.PowerPlatformUnpackSolution@2
+      displayName: 'Unpack to $(solutionFolder) (process Canvas apps)'
+      # Current PAC CLI prints a deprecation message for --processCanvasApps; allow success.
+      continueOnError: true
+      inputs:
+        SolutionInputFile: '$(Build.ArtifactStagingDirectory)/unmanaged/$(solutionName)_unmanaged.zip'
+        SolutionTargetFolder: '$(Build.SourcesDirectory)/$(solutionFolder)'
+        OverwriteFiles: true
+        ProcessCanvasApps: true
+
+    # -------- Auto-commit the unpacked source + settings folder back to main ([skip ci]) --------
+    - pwsh: |
+        git config --global user.email "devops-bot@spark365.local"
+        git config --global user.name  "Azure DevOps Pipeline"
+        git config --global --add safe.directory "$(Build.SourcesDirectory)"
+
+        # Ensure we're on the branch that triggered the build (main)
+        git checkout "$(Build.SourceBranchName)"
+        git pull --ff-only
+
+        # Stage both the unpacked solution and the pipelines/settings folder
+        git add "$(solutionFolder)" "pipelines/settings"
+
+        if (git diff --cached --quiet) {
+          Write-Host "No changes to commit."
+        }
+        else {
+          git commit -m "chore: scaffold folders and update unpacked $(solutionName) solution [skip ci]"
+          git push origin "$(Build.SourceBranchName)"
+        }
+      displayName: 'Commit scaffold + unpacked solution back to main'
+
+    # Publish artifacts for traceability
+    - publish: '$(Build.ArtifactStagingDirectory)/managed/$(solutionName)_managed.zip'
+      artifact: '$(managedArtifactName)'
+      displayName: 'Publish managed solution artifact'
+
+    - publish: '$(Build.SourcesDirectory)/$(solutionFolder)'
+      artifact: '$(srcArtifactName)'
+      displayName: 'Publish unpacked source'
+
+# =========================== DEPLOY (UAT) ===========================
+- stage: Deploy_UAT
+  displayName: 'Import MANAGED to UAT'
+  dependsOn: Build
+  condition: succeeded()
+  variables:
+    system.debug: true   # verbose logs for this stage
+  jobs:
+  - deployment: import_to_uat
+    displayName: 'Import to UAT'
+    environment: 'UAT'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # Install PAC CLI in this job too (required before other PP tasks)
+          - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
+            displayName: 'Power Platform Tool Installer (Deploy-UAT)'
+            inputs:
+              AddToolsToPath: true
+
+          # PAC CLI presence/version (non-blocking)
+          - pwsh: |
+              $ErrorActionPreference = 'Continue'
+              Write-Host "Checking PAC CLI presence and version..."
+              $cmd = Get-Command pac -ErrorAction SilentlyContinue
+              if ($null -eq $cmd) {
+                Write-Warning "pac not found on PATH. Tool Installer may have failed."
+              } else {
+                Write-Host "pac path: $($cmd.Source)"
+                pac --version 2>$null
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Warning "pac --version returned $LASTEXITCODE; showing 'pac help' instead."
+                  pac help
+                }
+              }
+            displayName: 'PAC CLI presence/version (non-blocking)'
+            continueOnError: true
+
+          # Download the managed artifact and verify presence
+          - download: current
+            artifact: '$(managedArtifactName)'
+
+          - pwsh: |
+              Write-Host "Verifying managed ZIP artifact (UAT)..."
+              $zip = "$(Pipeline.Workspace)/$(managedArtifactName)/$(solutionName)_managed.zip"
+              Write-Host "Expected path: $zip"
+              if (Test-Path $zip) {
+                Write-Host "Found managed ZIP."
+                Get-ChildItem -Recurse "$(Pipeline.Workspace)/$(managedArtifactName)" | Format-Table -AutoSize
+              } else {
+                Write-Error "Managed ZIP NOT found at $zip"
+                exit 1
+              }
+            displayName: 'Verify managed ZIP exists (UAT)'
+
+          # Verify UAT connection works
+          - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.whoami.PowerPlatformWhoAmi@2
+            displayName: 'WhoAmI (UAT)'
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: '$(uatServiceConnection)'
+
+          # Import the solution (no JSON settings file)
+          - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
+            displayName: 'Import MANAGED into UAT'
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: '$(uatServiceConnection)'
+              SolutionInputFile: '$(Pipeline.Workspace)/$(managedArtifactName)/$(solutionName)_managed.zip'
+              AsyncOperation: true
+              MaxAsyncWaitTime: 60
+              PublishWorkflows: false
+
+# =========================== DEPLOY (PROD) ==========================
+- stage: Deploy_PROD
+  displayName: 'Import MANAGED to PROD'
+  dependsOn: Deploy_UAT
+  condition: succeeded()
+  variables:
+    system.debug: true   # verbose logs for this stage
+  jobs:
+  - deployment: import_to_prod
+    displayName: 'Import to PROD'
+    environment: 'PROD'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          # Install PAC CLI in this job too (required before other PP tasks)
+          - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.tool-installer.PowerPlatformToolInstaller@2
+            displayName: 'Power Platform Tool Installer (Deploy-PROD)'
+            inputs:
+              AddToolsToPath: true
+
+          # PAC CLI presence/version (non-blocking)
+          - pwsh: |
+              $ErrorActionPreference = 'Continue'
+              Write-Host "Checking PAC CLI presence and version..."
+              $cmd = Get-Command pac -ErrorAction SilentlyContinue
+              if ($null -eq $cmd) {
+                Write-Warning "pac not found on PATH. Tool Installer may have failed."
+              } else {
+                Write-Host "pac path: $($cmd.Source)"
+                pac --version 2>$null
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Warning "pac --version returned $LASTEXITCODE; showing 'pac help' instead."
+                  pac help
+                }
+              }
+            displayName: 'PAC CLI presence/version (non-blocking)'
+            continueOnError: true
+
+          # Download the managed artifact and verify presence
+          - download: current
+            artifact: '$(managedArtifactName)'
+
+          - pwsh: |
+              Write-Host "Verifying managed ZIP artifact (PROD)..."
+              $zip = "$(Pipeline.Workspace)/$(managedArtifactName)/$(solutionName)_managed.zip"
+              Write-Host "Expected path: $zip"
+              if (Test-Path $zip) {
+                Write-Host "Found managed ZIP."
+                Get-ChildItem -Recurse "$(Pipeline.Workspace)/$(managedArtifactName)" | Format-Table -AutoSize
+              } else {
+                Write-Error "Managed ZIP NOT found at $zip"
+                exit 1
+              }
+            displayName: 'Verify managed ZIP exists (PROD)'
+
+          # Verify PROD connection works
+          - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.whoami.PowerPlatformWhoAmi@2
+            displayName: 'WhoAmI (PROD)'
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: '$(prodServiceConnection)'
+
+          # Import the solution (no JSON settings file)
+          - task: microsoft-IsvExpTools.PowerPlatform-BuildTools.import-solution.PowerPlatformImportSolution@2
+            displayName: 'Import MANAGED into PROD'
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: '$(prodServiceConnection)'
+              SolutionInputFile: '$(Pipeline.Workspace)/$(managedArtifactName)/$(solutionName)_managed.zip'
+              AsyncOperation: true
+              MaxAsyncWaitTime: 60
