@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<forms xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <systemform>
+    <formid>{e3b6d350-acc7-4947-a2f4-d2818b367d05}</formid>
+    <IntroducedVersion>1.0</IntroducedVersion>
+    <FormPresentation>1</FormPresentation>
+    <FormActivationState>1</FormActivationState>
+    <form headerdensity="HighWithControls">
+      <tabs>
+        <tab verticallayout="true" id="{61ad4600-dbdf-480b-94b1-6e8c4efddfda}" IsUserDefined="1">
+          <labels>
+            <label description="General" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="50%">
+              <sections>
+                <section showlabel="false" showbar="false" IsUserDefined="0" id="{caae7797-8964-4ffb-bd6f-02f3b2fc55da}">
+                  <labels>
+                    <label description="General" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row>
+                      <cell id="{1d05202e-f388-4ff3-a074-ba503d9ca424}">
+                        <labels>
+                          <label description="Name" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_name" classid="{4273EDBD-AC1D-40d3-9FB2-095C621B552D}" datafieldname="sprk_name" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{9716ad06-8e54-459e-aa99-4abddcea50ee}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Description" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_description" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="sprk_description" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{321e5e27-584e-4fe8-8641-e69939067f0d}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Acceptance Criteria" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_acceptancecriteria" classid="{E0DECE4B-6FC8-4A8F-A065-082708572369}" datafieldname="sprk_acceptancecriteria" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{c6c4778c-22f5-4334-9fde-2c21d576023b}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Priority" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_priority" classid="{3EF39988-22BB-4F0B-BBBE-64B5A3748AEE}" datafieldname="sprk_priority" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell locklevel="0" id="{7c023649-7261-49ef-a920-b8c84dc05af8}" rowspan="4" colspan="1" auto="false" showlabel="true">
+                        <labels>
+                          <label description="Tasks" languagecode="1033" />
+                        </labels>
+                        <control indicationOfSubgrid="true" id="Subgrid_new_1" classid="{E7A81278-8635-4D9E-8D4D-59480B391C5B}">
+                          <parameters>
+                            <RecordsPerPage>4</RecordsPerPage>
+                            <AutoExpand>Fixed</AutoExpand>
+                            <EnableQuickFind>false</EnableQuickFind>
+                            <EnableViewPicker>false</EnableViewPicker>
+                            <EnableChartPicker>true</EnableChartPicker>
+                            <ChartGridMode>All</ChartGridMode>
+                            <RelationshipName>sprk_task_UserStory_sprk_userstory</RelationshipName>
+                            <TargetEntityType>task</TargetEntityType>
+                            <ViewId>{6CF285AA-EB20-4277-925A-3E9735411FF0}</ViewId>
+                            <ViewIds>{6CF285AA-EB20-4277-925A-3E9735411FF0}</ViewIds>
+                            <VisualizationId>{9E6A8B06-6D14-46E6-BBF5-95C388C6EB7A}</VisualizationId>
+                          </parameters>
+                        </control>
+                      </cell>
+                    </row>
+                    <row />
+                    <row />
+                    <row />
+                    <row>
+                      <cell locklevel="0" id="{f8db4580-2ba4-480c-a161-fb15d61911d0}" rowspan="4" colspan="1" auto="false">
+                        <labels>
+                          <label description="New SG control 1760956724332" languagecode="1033" />
+                        </labels>
+                        <control indicationOfSubgrid="true" id="Subgrid_new_2" classid="{E7A81278-8635-4D9E-8D4D-59480B391C5B}">
+                          <parameters>
+                            <RecordsPerPage>4</RecordsPerPage>
+                            <AutoExpand>Fixed</AutoExpand>
+                            <EnableQuickFind>false</EnableQuickFind>
+                            <EnableViewPicker>false</EnableViewPicker>
+                            <EnableChartPicker>true</EnableChartPicker>
+                            <ChartGridMode>All</ChartGridMode>
+                            <RelationshipName>sprk_task_UserStory_sprk_userstory</RelationshipName>
+                            <TargetEntityType>task</TargetEntityType>
+                            <ViewId>{2b5f5a5d-2d23-4fe7-aa58-e77995368ae7}</ViewId>
+                            <ViewIds>{2b5f5a5d-2d23-4fe7-aa58-e77995368ae7}</ViewIds>
+                            <VisualizationId>{9e6a8b06-6d14-46e6-bbf5-95c388c6eb7a}</VisualizationId>
+                          </parameters>
+                        </control>
+                      </cell>
+                    </row>
+                    <row />
+                    <row />
+                    <row />
+                  </rows>
+                </section>
+              </sections>
+            </column>
+            <column width="50%">
+              <sections>
+                <section name="_section_9" id="b9e6ab10-1346-4b9e-bb4d-4ee4032f5e1f" IsUserDefined="0" locklevel="0" showlabel="true" showbar="false" layout="varwidth" celllabelalignment="Left" celllabelposition="Left" columns="1" labelwidth="115">
+                  <labels>
+                    <label description="New Section" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row />
+                    <row>
+                      <cell id="{97646f56-3863-4f82-bbfa-32bc46f32d11}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Start Date" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_startdate" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="sprk_startdate" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{9f90c8b7-b056-4397-8f22-777c4c8f980a}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Target Date" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_targetdate" classid="{5B773807-9FB2-42DB-97C3-7A91EFF8ADFF}" datafieldname="sprk_targetdate" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
+                      <cell id="{d3d32ba6-8ffa-4027-83c8-435e93dd15a1}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Effort" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_effort" classid="{AA987274-CE4E-4271-A803-66164311A958}" datafieldname="sprk_effort" disabled="false" />
+                      </cell>
+                    </row>
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+        <tab name="tab_2" id="4584a29f-cb6e-40c4-8dcd-030476e11688" IsUserDefined="0" locklevel="0" showlabel="true">
+          <labels>
+            <label description="Testing" languagecode="1033" />
+          </labels>
+          <columns>
+            <column width="100%">
+              <sections>
+                <section name="tab_2_section_1" id="73b812aa-cab2-4b6c-9613-b01e61315dd8" IsUserDefined="0" locklevel="0" showlabel="true" showbar="false" layout="varwidth" celllabelalignment="Left" celllabelposition="Left" columns="1" labelwidth="115">
+                  <labels>
+                    <label description="Test Plans" languagecode="1033" />
+                  </labels>
+                  <rows>
+                    <row />
+                    <row>
+                      <cell locklevel="0" id="{8d7cb924-ab24-49e5-aab1-b335a87165d9}" rowspan="4" colspan="1" auto="false" showlabel="false">
+                        <labels>
+                          <label description="New SG control 1760956910588" languagecode="1033" />
+                        </labels>
+                        <control indicationOfSubgrid="true" id="Subgrid_new_3" classid="{E7A81278-8635-4D9E-8D4D-59480B391C5B}">
+                          <parameters>
+                            <RecordsPerPage>4</RecordsPerPage>
+                            <AutoExpand>Fixed</AutoExpand>
+                            <EnableQuickFind>false</EnableQuickFind>
+                            <EnableViewPicker>false</EnableViewPicker>
+                            <EnableChartPicker>true</EnableChartPicker>
+                            <ChartGridMode>All</ChartGridMode>
+                            <RelationshipName>sprk_testplan_UserStory_sprk_userstory</RelationshipName>
+                            <TargetEntityType>sprk_testplan</TargetEntityType>
+                            <ViewId>{849D0DD7-F991-471A-BBE8-0A67C1DCDACF}</ViewId>
+                            <ViewIds>{849D0DD7-F991-471A-BBE8-0A67C1DCDACF}</ViewIds>
+                          </parameters>
+                        </control>
+                      </cell>
+                    </row>
+                    <row />
+                    <row />
+                    <row />
+                  </rows>
+                </section>
+              </sections>
+            </column>
+          </columns>
+        </tab>
+      </tabs>
+      <header id="{74eebbb8-ee61-46b1-ad5d-9d8986af4996}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{07bd3b91-e7a1-4831-bbfe-94b16425cb85}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{dc620a57-c2f3-4b60-9ac3-629dfcc41299}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{0eeffcaa-055b-40ac-8c8d-2bbb0c3c54f5}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </header>
+      <footer id="{bc8cc994-96c6-40b1-a008-11df044810f4}" celllabelposition="Top" columns="111" labelwidth="115" celllabelalignment="Left">
+        <rows>
+          <row>
+            <cell id="{f77ec9db-c180-449c-8dcc-d24b796a98ec}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{9377c3ad-98ab-4c51-9854-9447b5b3ba4a}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+            <cell id="{53ddd0bf-73c1-4d80-ae1a-f271a11d155b}" showlabel="false">
+              <labels>
+                <label description="" languagecode="1033" />
+              </labels>
+            </cell>
+          </row>
+        </rows>
+      </footer>
+      <DisplayConditions Order="0" FallbackForm="true">
+        <Everyone />
+      </DisplayConditions>
+    </form>
+    <IsCustomizable>1</IsCustomizable>
+    <CanBeDeleted>1</CanBeDeleted>
+    <LocalizedNames>
+      <LocalizedName description="Information" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="A form for this entity." languagecode="1033" />
+    </Descriptions>
+  </systemform>
+</forms>
