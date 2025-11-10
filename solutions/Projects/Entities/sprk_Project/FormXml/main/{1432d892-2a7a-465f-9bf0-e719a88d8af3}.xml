@@ -28,6 +28,14 @@
                       </cell>
                     </row>
                     <row>
+                      <cell id="{d6d1090b-7b1c-4fc7-a9d2-99bc73376572}" locklevel="0" colspan="1" rowspan="1">
+                        <labels>
+                          <label description="Demo" languagecode="1033" />
+                        </labels>
+                        <control id="sprk_demo" classid="{4273EDBD-AC1D-40D3-9FB2-095C621B552D}" datafieldname="sprk_demo" disabled="false" />
+                      </cell>
+                    </row>
+                    <row>
                       <cell id="{b9b7d1bd-4814-43b5-8244-cabd62dc0fe9}" locklevel="0" colspan="1" rowspan="1">
                         <labels>
                           <label description="Test Column" languagecode="1033" />
